@@ -56,8 +56,6 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 	defer client.Close()
 
 	sub := client.Subscription(subscriptionId)
-	cctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	// MaxOutstandingMessages limits the number of concurrent handlers of messages.
 	// In this case, up to [maxOutstanding] unacked messages can be handled concurrently.
@@ -69,7 +67,7 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 	fmt.Printf("Configuring for %v concurrent messages\n", maxOutstanding)
 	sub.ReceiveSettings.MaxOutstandingMessages = maxOutstanding
 
-	err = sub.Receive(cctx, func(ctx context.Context, m *pubsub.Message) {
+	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		// fmt.Println("Got message:", string(m.Data))
 
 		// Sleep to emulate processing time
