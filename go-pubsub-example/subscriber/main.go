@@ -17,8 +17,8 @@ import (
 // /////////////////////////
 var subscriptionId = "my-pull-subscription"
 var projectId = "my-project-id"
-var processingDelayMs = 500               //Delay to simulate message processing time
-var maxOutstanding = 1000                   //Maximum number of concurrent messages
+var processingDelayMs = 500 //Delay to simulate message processing time
+var maxOutstanding = 1000   //Maximum number of concurrent messages
 ///////////////////////////
 
 var maxMessages = os.Getenv("MAX_CONCURRENT_MESSAGES")
@@ -61,7 +61,7 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 	defer cancel()
 
 	// MaxOutstandingMessages limits the number of concurrent handlers of messages.
-	// In this case, up to 1 unacked messages can be handled concurrently.
+	// In this case, up to [maxOutstanding] unacked messages can be handled concurrently.
 	// Note, even in synchronous mode, messages pulled in a batch can still be handled
 	// concurrently.
 	if len(maxMessages) > 0 {
