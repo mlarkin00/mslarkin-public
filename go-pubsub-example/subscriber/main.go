@@ -30,16 +30,15 @@ func main() {
 	// SIGINT handles Ctrl+C locally.
 	// SIGTERM handles Cloud Run termination signal.
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	ctx := context.Background()
 
 	go func() {
 		for {
-			ctx, cancel := context.WithCancel(context.Background())
 			fmt.Println("Waiting for messages...")
 			err := subscribeToPullQueue(ctx, projectId, subscriptionId)
 			if err != nil {
 				fmt.Printf("sub.Receive: %v", err)
 			}
-			cancel()
 		}
 	}()
 
