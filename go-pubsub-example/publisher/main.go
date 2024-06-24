@@ -49,11 +49,15 @@ func main() {
 
 	go func() {
 		for {
+			start := time.Now()
 			//Publish messages based on configured messagesPerSecond
 			for b := 0; b < messagesPerSecond; b++ {
 				go publishMessage(ctx, topic, msg)
 			}
-			time.Sleep(1 * time.Second)
+			sendTime := time.Since(start)
+			//Sleep for time remaining until end of 1s period, or continue immediately
+			sleepTime := max((1*time.Second)-sendTime, 0*time.Second)
+			time.Sleep(sleepTime)
 			select {
 			case <-ctx.Done():
 				return
