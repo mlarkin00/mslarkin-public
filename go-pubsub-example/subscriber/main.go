@@ -15,9 +15,9 @@ import (
 // /////////////////////////
 // Configure environment //
 // /////////////////////////
-var subscriptionId = "my-pull-subscription"
-var projectId = "my-project-id"
-var processingDelayMs = 500 //Delay to simulate message processing time
+var subscriptionId = "pull-queue-testing" //"my-pull-subscription"
+var projectId = "mslarkin-ext" //"my-project-id"
+var processingDelayMs = 1000 //Delay to simulate message processing time
 var maxOutstanding = 1000   //Maximum number of concurrent messages
 ///////////////////////////
 
