@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -19,7 +20,6 @@ import (
 var topicId = "my-topic"
 var projectId = "my-project-id"
 var messagesPerSecond = 200 //Number of messages per second to publish
-var messagesPerBatch = 1    //Set to 1 to disable batch publishing
 ///////////////////////////
 
 // Create channel to listen for signals.
@@ -30,6 +30,23 @@ func main() {
 	// SIGTERM handles Cloud Run termination signal.
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
+
+	// Set up HTTP listener for manually publishing messages
+	http.HandleFunc("/publish-message", publishHandler)
+
+	// Determine port for HTTP service.
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("defaulting to port %s", port)
+	}
+
+	go func() {
+		// Start HTTP server.
+		if err := http.ListenAndServe(":"+port, nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	//Get configured messagesPerSecond
 	mps := os.Getenv("MESSAGES_PER_SECOND")
@@ -43,10 +60,10 @@ func main() {
 	}
 	defer client.Close()
 
-	msg := "Hello World (generated)"
+	msg := "Hello World (auto-generated)"
 	topic := client.Topic(topicId)
-	topic.PublishSettings.CountThreshold = messagesPerBatch
 
+	// Continually publish messages in the background
 	go func() {
 		for {
 			start := time.Now()
@@ -71,16 +88,34 @@ func main() {
 	fmt.Printf("%s signal caught\n", sig)
 }
 
-func publishMessage(ctx context.Context, topic *pubsub.Topic, message string) {
+func publishMessage(ctx context.Context, topic *pubsub.Topic, message string) string {
 
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte(message),
 	})
 	// Block until the result is returned and a server-generated
-	// ID is returned for the published message.
+	// ID is returned for the published message (discarded).
 	id, err := result.Get(ctx)
 	if err != nil {
-		fmt.Println(fmt.Errorf("Get: %w", err))
+		fmt.Println(fmt.Errorf("error publishing message: %w", err))
 	}
-	fmt.Printf("Published message ID: %v\n", id)
+	return id
+}
+
+// Manually publish a message with HTTP request
+func publishHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	client, err := pubsub.NewClient(ctx, projectId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Close()
+
+	msg := "Hello World (manually published)"
+	topic := client.Topic(topicId)
+	msgId := publishMessage(ctx, topic, msg)
+
+	fmt.Fprintf(w, "Message ID %v published", msgId)
 }
