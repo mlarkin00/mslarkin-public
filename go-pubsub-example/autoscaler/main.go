@@ -22,23 +22,20 @@ import (
 
 // Create channel to listen for signals.
 var signalChan chan (os.Signal) = make(chan os.Signal, 1)
-var lastUpdate time.Time
 
-var topicId string = "my-topic"
-var subscriptionId string = "my-pull-subscription"
-var projectId string = "my-project-id"
-
-var subscriberServiceName string = "my-subscriber-service"
-var subscriberRegion string = "us-central1"
+var subscriptionId string = os.Getenv("SUBSCRIPTION_ID")               //"my-pull-subscription"
+var projectId string = os.Getenv("PROJECT_ID")                         //"my-project-id"
+var subscriberServiceName string = os.Getenv("SUBSCRIPTION_SERVICE")   //"my-subscriber-service"
+var subscriberRegion string = os.Getenv("SUBSCRIPTION_SERVICE_REGION") //"us-central1"
 
 // Flag to enable/disable autoscaling of Subscriber service
 var enableAutoscaling bool = true
+var maxScaleUpRate float64 = 1 // Limit scale-up per iteration (1 = 100%)
 
 // Configure scaling metric targets and instance capacity
-var rateUtilizationTarget float64 = 1
-var targetRange float64 = .1
-var targetAckLatencyMs float64 = 2000
-var instanceCapacity int32 = 1000
+var targetAckLatencyMs float64 = 1200
+var targetMaxAgeS float64 = 2
+var instanceCapacity int32 = 1500
 
 var checkDelayS = 60   // Frequency for metrics checks
 var updateDelayMin = 5 // Time to wait, after a change, before making any other changes
@@ -55,24 +52,24 @@ func main() {
 	if len(enableAutoscalingEnv) > 0 {
 		enableAutoscaling, _ = strconv.ParseBool(enableAutoscalingEnv)
 	}
-
-	rateTargetEnv := os.Getenv("UTILIZATION_TARGET")
-	if len(rateTargetEnv) > 0 {
-		rateUtilizationTarget, _ = strconv.ParseFloat(rateTargetEnv, 64)
-	}
-	targetRangeEnv := os.Getenv("TARGET_RANGE")
-	if len(targetRangeEnv) > 0 {
-		targetRange, _ = strconv.ParseFloat(targetRangeEnv, 64)
+	maxScaleUpEnv := os.Getenv("MAX_SCALE_UP_RATE")
+	if len(maxScaleUpEnv) > 0 {
+		maxScaleUpRate, _ = strconv.ParseFloat(maxScaleUpEnv, 64)
 	}
 	targetAckLatencyEnv := os.Getenv("TARGET_ACK_LATENCY_MS")
 	if len(targetAckLatencyEnv) > 0 {
 		targetAckLatencyMs, _ = strconv.ParseFloat(targetAckLatencyEnv, 64)
+	}
+	maxAgeEnv := os.Getenv("MAX_AGE_S")
+	if len(maxAgeEnv) > 0 {
+		targetMaxAgeS, _ = strconv.ParseFloat(maxAgeEnv, 64)
 	}
 	instanceCapacityEnv := os.Getenv("INSTANCE_CAPACITY")
 	if len(instanceCapacityEnv) > 0 {
 		ic, _ := strconv.Atoi(instanceCapacityEnv)
 		instanceCapacity = int32(ic)
 	}
+
 	updateDelayEnv := os.Getenv("UPDATE_DELAY_MIN")
 	if len(updateDelayEnv) > 0 {
 		updateDelayMin, _ = strconv.Atoi(updateDelayEnv)
@@ -84,10 +81,8 @@ func main() {
 
 	go func() {
 		for {
-			if enableAutoscaling {
-				// Autoscaling logic
-				scalingCheck(ctx)
-			}
+			// Autoscaling logic
+			scalingCheck(ctx)
 			time.Sleep(time.Duration(checkDelayS) * time.Second)
 		}
 	}()
@@ -107,76 +102,64 @@ func scalingCheck(ctx context.Context) {
 	subscriberService, _ := getRunService(ctx, subscriberServiceName, projectId, subscriberRegion)
 	configuredInstances := subscriberService.Scaling.MinInstanceCount
 	currentInstances := getInstanceCount(ctx, subscriberServiceName, projectId, subscriberRegion)
-	lastUpdate = subscriberService.UpdateTime.AsTime()
-	fmt.Printf("Service: %s\nInstances: Configured: %v | Current: %v\nLast Updated: %v\n",
-		subscriberServiceName, configuredInstances, currentInstances, lastUpdate)
+	timeSinceUpdate := time.Since(subscriberService.UpdateTime.AsTime())
+	fmt.Printf("Service: %s | Instances: Configured: %v | Current: %v | Last Updated: %v ago\n",
+		subscriberServiceName, configuredInstances, currentInstances, timeSinceUpdate)
 
 	// Get metrics
-	publishRate := getPublishRate(ctx, topicId, projectId)
-	ackRate := getAckRate(ctx, subscriptionId, projectId)
-	rateUtilization := publishRate / ackRate
 	ackLatencyMs := getAckLatencyMs(ctx, subscriptionId, projectId)
 	messageBacklog := getMessageBacklog(ctx, subscriptionId, projectId)
+	// maxMessageAge := getMaxMessageAgeS(ctx, subscriptionId, projectId)
 
-	fmt.Printf("CHECK: Pub Rate: %v, Ack Rate: %v, Utilization: %v\n", publishRate, ackRate, rateUtilization)
-	pubAckRecommendation := utilizationValueRecommendation(rateUtilization, rateUtilizationTarget, targetRange, currentInstances)
-	if pubAckRecommendation != configuredInstances {
-		fmt.Printf("CHECK: Recommended Instance change (Pub/Ack Delta): %v --> %v\n", configuredInstances, pubAckRecommendation)
-	}
-
-	fmt.Printf("\nCHECK: Ack Latency (ms): %v, Target (ms): %v\n", ackLatencyMs, targetAckLatencyMs)
+	// Get recommended instances for each metric
 	ackLatencyRecommendation := averageValueRecommendation(ackLatencyMs, targetAckLatencyMs, currentInstances)
-	if ackLatencyRecommendation != configuredInstances {
-		fmt.Printf("CHECK: Recommended Instance change (Ack Latency): %v --> %v\n", configuredInstances, ackLatencyRecommendation)
-	}
-
-	fmt.Printf("\nCHECK: Backlog (# messages): %v, Instance Capacity: %v\n", messageBacklog, instanceCapacity)
 	capacityRecommendation := instanceCapacityRecommendation(messageBacklog, instanceCapacity)
-	if capacityRecommendation != configuredInstances {
-		fmt.Printf("CHECK: Recommended Instance change (Backlog): %v --> %v\n", configuredInstances, capacityRecommendation)
-	}
+	// maxAgeRecommendation := averageValueRecommendation(maxMessageAge, targetMaxAgeS, currentInstances)
 
-	if pubAckRecommendation > configuredInstances {
-		recommendedInstances = max(pubAckRecommendation, ackLatencyRecommendation, capacityRecommendation)
+	if ackLatencyRecommendation > configuredInstances {
+		// recommendedInstances = max(ackLatencyRecommendation, maxAgeRecommendation)
+		recommendedInstances = ackLatencyRecommendation
+		// } else if maxAgeRecommendation < configuredInstances {
+		// 	recommendedInstances = maxAgeRecommendation
+	} else if capacityRecommendation < configuredInstances {
+		recommendedInstances = capacityRecommendation
 	} else {
-		recommendedInstances = max(ackLatencyRecommendation, capacityRecommendation)
+		recommendedInstances = configuredInstances
 	}
 
-	if recommendedInstances != configuredInstances {
-		fmt.Printf("--------\nCHECK: Recommended Instance change (Final): %v --> %v\n------\n", configuredInstances, recommendedInstances)
-	}
-
-	// If the recommendation is greater than the current configuration, and the change delay has expired
-	// OR if the recommendation is lower than the current configuration
-	if recommendedInstances > configuredInstances &&
-		time.Since(subscriberService.UpdateTime.AsTime()) > (time.Duration(updateDelayMin)*time.Minute) ||
-		configuredInstances > recommendedInstances {
+	// If the current instance count has caught up with configured instances
+	// AND
+	// If the recommendation is greater than the current configured instances AND the change delay has expired
+	// OR the recommendation is lower than the current configuration
+	if configuredInstances == currentInstances &&
+		(recommendedInstances > configuredInstances &&
+			time.Since(subscriberService.UpdateTime.AsTime()) > (time.Duration(updateDelayMin)*time.Minute) ||
+			configuredInstances > recommendedInstances) {
 		fmt.Printf("Time since last change: %v\n", time.Since(subscriberService.UpdateTime.AsTime()))
-		fmt.Printf("Recommended Instance change: %v --> %v\n", configuredInstances, recommendedInstances)
-		fmt.Println("Updating Instances...")
-		updateInstanceCount(ctx, subscriberService, recommendedInstances)
-		fmt.Println("Instance count updated")
+		// Only effect the change if autoscaling is enabled
+		if enableAutoscaling {
+			fmt.Printf("ACTUAL: Recommended Instance change: %v --> %v\n", configuredInstances, recommendedInstances)
+			if float64((recommendedInstances-configuredInstances)/configuredInstances) > maxScaleUpRate {
+				recommendedInstances = int32(math.Ceil((1 + maxScaleUpRate) * float64(configuredInstances)))
+				fmt.Printf("Limiting scale-up to %v instances\n", recommendedInstances)
+			}
+			fmt.Println("Updating Instances...")
+			updateInstanceCount(ctx, subscriberService, recommendedInstances)
+			fmt.Println("Instance count updated")
+		} else {
+			fmt.Printf("DRY_RUN: Recommended Instance change: %v --> %v\n",
+				configuredInstances, recommendedInstances)
+		}
 	}
-
-}
-
-func utilizationValueRecommendation(utilizationValue float64, utilizationTarget float64, targetRange float64, currentInstanceCount int32) int32 {
-	var recommendedInstances int32
-	if utilizationValue > (utilizationTarget+targetRange) || utilizationValue < (utilizationTarget-targetRange) {
-		recommendedInstances = int32(math.Round(float64(currentInstanceCount)*utilizationValue) * utilizationTarget)
-	} else {
-		recommendedInstances = currentInstanceCount
-	}
-	return int32(recommendedInstances)
 }
 
 func averageValueRecommendation(metricValue float64, metricTarget float64, currentInstanceCount int32) int32 {
-	recommendedInstances := math.Ceil(float64(currentInstanceCount) * (metricValue / metricTarget))
+	recommendedInstances := max(math.Ceil(float64(currentInstanceCount)*(metricValue/metricTarget)), 1)
 	return int32(recommendedInstances)
 }
 
 func instanceCapacityRecommendation(metricValue int32, instanceCapacity int32) int32 {
-	recommendedInstances := math.Ceil(float64(metricValue) / float64(instanceCapacity))
+	recommendedInstances := max(math.Ceil(float64(metricValue)/float64(instanceCapacity)), 1)
 	return int32(recommendedInstances)
 }
 
@@ -290,46 +273,23 @@ func getMessageBacklog(ctx context.Context, subscriptionId string, projectId str
 	return int32(metricData[0].GetValue().GetDoubleValue())
 }
 
-func getPublishRate(ctx context.Context, topicId string, projectId string) float64 {
-	monitoringMetric := "pubsub.googleapis.com/topic/message_sizes"
+func getMaxMessageAgeS(ctx context.Context, subscriptionId string, projectId string) float64 {
+	monitoringMetric := "pubsub.googleapis.com/subscription/oldest_unacked_message_age"
 	aggregationSeconds := 60
-	metricDelaySeconds := 240
-	groupBy := []string{"resource.labels.topic_id"}
-	metricFilter := fmt.Sprintf("metric.type=\"%s\""+
-		" AND resource.labels.topic_id =\"%s\"",
-		monitoringMetric, topicId)
-
-	metricData := getMetricDelta(ctx,
-		metricFilter,
-		metricDelaySeconds,
-		aggregationSeconds,
-		groupBy,
-		projectId)
-
-	messagesPerMinute := float64(metricData[0].Value.GetDistributionValue().Count)
-
-	//Return the latest rate datapoint (converted to seconds)
-	return messagesPerMinute / 60
-}
-
-func getAckRate(ctx context.Context, subscriptionId string, projectId string) float64 {
-	monitoringMetric := "pubsub.googleapis.com/subscription/ack_message_count"
-	aggregationSeconds := 60
-	metricDelaySeconds := 240
+	metricDelaySeconds := 120
 	groupBy := []string{"resource.labels.subscription_id"}
 	metricFilter := fmt.Sprintf("metric.type=\"%s\""+
 		" AND resource.labels.subscription_id =\"%s\"",
 		monitoringMetric, subscriptionId)
 
-	metricData := getMetricRate(ctx,
+	metricData := getMetricMean(ctx,
 		metricFilter,
 		metricDelaySeconds,
 		aggregationSeconds,
 		groupBy,
 		projectId)
 
-	//Return the latest rate datapoint
-	return float64(metricData[0].GetValue().GetDoubleValue())
+	return metricData[0].GetValue().GetDoubleValue()
 }
 
 func getAckLatencyMs(ctx context.Context, subscriptionId string, projectId string) float64 {
@@ -351,68 +311,6 @@ func getAckLatencyMs(ctx context.Context, subscriptionId string, projectId strin
 
 	//Return the latest rate datapoint
 	return float64(metricData[0].GetValue().GetDistributionValue().Mean)
-}
-
-func getMetricRate(ctx context.Context,
-	resourceFilter string,
-	metricDelaySeconds int,
-	aggregationSeconds int,
-	groupBy []string,
-	projectId string) []monitoringpb.Point {
-	client, err := monitoring.NewMetricClient(ctx)
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
-
-	//Configure metric aggregation
-	aggregationStruct := &monitoringpb.Aggregation{
-		CrossSeriesReducer: monitoringpb.Aggregation_REDUCE_SUM,
-		PerSeriesAligner:   monitoringpb.Aggregation_ALIGN_RATE,
-		GroupByFields:      groupBy,
-		AlignmentPeriod: &durationpb.Duration{
-			Seconds: int64(aggregationSeconds),
-		},
-	}
-
-	//Configure metric interval
-	startTime := time.Now().UTC().Add(time.Second * -time.Duration(metricDelaySeconds+aggregationSeconds))
-	endTime := time.Now().UTC()
-
-	interval := &monitoringpb.TimeInterval{
-		StartTime: &timestamppb.Timestamp{
-			Seconds: startTime.Unix(),
-		},
-		EndTime: &timestamppb.Timestamp{
-			Seconds: endTime.Unix(),
-		},
-	}
-
-	req := &monitoringpb.ListTimeSeriesRequest{
-		Name:        "projects/" + projectId,
-		Filter:      resourceFilter,
-		Interval:    interval,
-		Aggregation: aggregationStruct,
-	}
-
-	// Get the time series data.
-	it := client.ListTimeSeries(ctx, req)
-	var data []monitoringpb.Point
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			// Handle error.
-			panic(err)
-		}
-		// Use resp.
-		for _, point := range resp.GetPoints() {
-			data = append(data, *point)
-		}
-	}
-	return data
 }
 
 func getMetricMean(ctx context.Context,
