@@ -17,9 +17,9 @@ import (
 // /////////////////////////
 // Configure environment //
 // /////////////////////////
-var topicId = "my-topic"
-var projectId = "my-project-id"
-var messagesPerSecond = 200 //Number of messages per second to publish
+var topicId string = os.Getenv("TOPIC_ID")     //"my-pubsub-topic"
+var projectId string = os.Getenv("PROJECT_ID") //"my-project-id"
+var messagesPerSecond = 200                    //Number of messages per second to publish
 ///////////////////////////
 
 // Create channel to listen for signals.
@@ -30,6 +30,11 @@ func main() {
 	// SIGTERM handles Cloud Run termination signal.
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
+
+	messagesPerSecondEnv := os.Getenv("MESSAGES_PER_SECOND")
+	if len(messagesPerSecondEnv) > 0 {
+		messagesPerSecond, _ = strconv.Atoi(messagesPerSecondEnv)
+	}
 
 	// Set up HTTP listener for manually publishing messages
 	http.HandleFunc("/publish-message", publishHandler)
@@ -47,12 +52,6 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
-
-	//Get configured messagesPerSecond
-	mps := os.Getenv("MESSAGES_PER_SECOND")
-	if len(mps) > 0 {
-		messagesPerSecond, _ = strconv.Atoi(mps)
-	}
 
 	client, err := pubsub.NewClient(ctx, projectId)
 	if err != nil {

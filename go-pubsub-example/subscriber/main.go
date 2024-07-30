@@ -15,13 +15,11 @@ import (
 // /////////////////////////
 // Configure environment //
 // /////////////////////////
-var subscriptionId = "my-pull-subscription"
-var projectId = "my-project-id"
-var processingDelayMs = 1000 //Delay to simulate message processing time
-var maxOutstanding = 1000   //Maximum number of concurrent messages
+var subscriptionId string = os.Getenv("SUBSCRIPTION_ID") //"my-pull-subscription"
+var projectId string = os.Getenv("PROJECT_ID")           //"my-project-id"
+var processingDelayMs = 1000                             //Delay to simulate message processing time
+var maxOutstanding = 1000                                //Maximum number of concurrent messages
 ///////////////////////////
-
-var maxMessages = os.Getenv("MAX_CONCURRENT_MESSAGES")
 
 // Create channel to listen for signals.
 var signalChan chan (os.Signal) = make(chan os.Signal, 1)
@@ -31,6 +29,15 @@ func main() {
 	// SIGTERM handles Cloud Run termination signal.
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
+
+	maxOutstandingEnv := os.Getenv("MAX_CONCURRENT_MESSAGES")
+	if len(maxOutstandingEnv) > 0 {
+		maxOutstanding, _ = strconv.Atoi(maxOutstandingEnv)
+	}
+	processDelayEnv := os.Getenv("PROCESS_DELAY_MS")
+	if len(processDelayEnv) > 0 {
+		processingDelayMs, _ = strconv.Atoi(processDelayEnv)
+	}
 
 	go func() {
 		for {
@@ -61,9 +68,6 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 	// In this case, up to [maxOutstanding] unacked messages can be handled concurrently.
 	// Note, even in synchronous mode, messages pulled in a batch can still be handled
 	// concurrently.
-	if len(maxMessages) > 0 {
-		maxOutstanding, _ = strconv.Atoi(maxMessages)
-	}
 	fmt.Printf("Configuring for %v concurrent messages\n", maxOutstanding)
 	sub.ReceiveSettings.MaxOutstandingMessages = maxOutstanding
 
