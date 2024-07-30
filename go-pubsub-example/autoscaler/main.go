@@ -31,14 +31,17 @@ var projectId string = "my-project-id"
 var subscriberServiceName string = "my-subscriber-service"
 var subscriberRegion string = "us-central1"
 
+// Flag to enable/disable autoscaling of Subscriber service
+var enableAutoscaling bool = true
+
 // Configure scaling metric targets and instance capacity
 var rateUtilizationTarget float64 = 1
 var targetRange float64 = .1
 var targetAckLatencyMs float64 = 2000
 var instanceCapacity int32 = 1000
 
-// Time to wait, after a change, before making any other changes
-var updateDelayMin = 5
+var checkDelayS = 60   // Frequency for metrics checks
+var updateDelayMin = 5 // Time to wait, after a change, before making any other changes
 
 func main() {
 	// SIGINT handles Ctrl+C locally.
@@ -47,6 +50,11 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	enableAutoscalingEnv := os.Getenv("ENABLE_AUTOSCALING")
+	if len(enableAutoscalingEnv) > 0 {
+		enableAutoscaling, _ = strconv.ParseBool(enableAutoscalingEnv)
+	}
 
 	rateTargetEnv := os.Getenv("UTILIZATION_TARGET")
 	if len(rateTargetEnv) > 0 {
@@ -65,12 +73,22 @@ func main() {
 		ic, _ := strconv.Atoi(rateTargetEnv)
 		instanceCapacity = int32(ic)
 	}
+	updateDelayEnv := os.Getenv("UPDATE_DELAY_MIN")
+	if len(updateDelayEnv) > 0 {
+		updateDelayMin, _ = strconv.Atoi(rateTargetEnv)
+	}
+	checkDelayEnv := os.Getenv("CHECK_DELAY_S")
+	if len(checkDelayEnv) > 0 {
+		checkDelayS, _ = strconv.Atoi(checkDelayEnv)
+	}
 
 	go func() {
 		for {
-			// Autoscaling logic
-			scalingCheck(ctx)
-			time.Sleep(30 * time.Second)
+			if enableAutoscaling {
+				// Autoscaling logic
+				scalingCheck(ctx)
+			}
+			time.Sleep(time.Duration(checkDelayS) * time.Second)
 		}
 	}()
 
