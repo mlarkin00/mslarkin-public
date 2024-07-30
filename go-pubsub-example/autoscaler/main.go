@@ -62,20 +62,20 @@ func main() {
 	}
 	targetRangeEnv := os.Getenv("TARGET_RANGE")
 	if len(targetRangeEnv) > 0 {
-		targetRange, _ = strconv.ParseFloat(rateTargetEnv, 64)
+		targetRange, _ = strconv.ParseFloat(targetRangeEnv, 64)
 	}
 	targetAckLatencyEnv := os.Getenv("TARGET_ACK_LATENCY_MS")
 	if len(targetAckLatencyEnv) > 0 {
-		targetAckLatencyMs, _ = strconv.ParseFloat(rateTargetEnv, 64)
+		targetAckLatencyMs, _ = strconv.ParseFloat(targetAckLatencyEnv, 64)
 	}
 	instanceCapacityEnv := os.Getenv("INSTANCE_CAPACITY")
 	if len(instanceCapacityEnv) > 0 {
-		ic, _ := strconv.Atoi(rateTargetEnv)
+		ic, _ := strconv.Atoi(instanceCapacityEnv)
 		instanceCapacity = int32(ic)
 	}
 	updateDelayEnv := os.Getenv("UPDATE_DELAY_MIN")
 	if len(updateDelayEnv) > 0 {
-		updateDelayMin, _ = strconv.Atoi(rateTargetEnv)
+		updateDelayMin, _ = strconv.Atoi(updateDelayEnv)
 	}
 	checkDelayEnv := os.Getenv("CHECK_DELAY_S")
 	if len(checkDelayEnv) > 0 {
