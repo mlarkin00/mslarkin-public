@@ -33,12 +33,11 @@ var enableAutoscaling bool = true
 var maxScaleUpRate float64 = 1 // Limit scale-up per iteration (1 = 100%)
 
 // Configure scaling metric targets and instance capacity
-var targetAckLatencyMs float64 = 1200
-var targetMaxAgeS float64 = 2
+var targetAckLatencyMs float64 = 1100
 var instanceCapacity int32 = 1500
 
 var checkDelayS = 60   // Frequency for metrics checks
-var updateDelayMin = 5 // Time to wait, after a change, before making any other changes
+var updateDelayMin = 1 // Time to wait, after a change, before making any other changes
 
 func main() {
 	// SIGINT handles Ctrl+C locally.
@@ -60,10 +59,7 @@ func main() {
 	if len(targetAckLatencyEnv) > 0 {
 		targetAckLatencyMs, _ = strconv.ParseFloat(targetAckLatencyEnv, 64)
 	}
-	maxAgeEnv := os.Getenv("MAX_AGE_S")
-	if len(maxAgeEnv) > 0 {
-		targetMaxAgeS, _ = strconv.ParseFloat(maxAgeEnv, 64)
-	}
+
 	instanceCapacityEnv := os.Getenv("INSTANCE_CAPACITY")
 	if len(instanceCapacityEnv) > 0 {
 		ic, _ := strconv.Atoi(instanceCapacityEnv)
@@ -109,18 +105,13 @@ func scalingCheck(ctx context.Context) {
 	// Get metrics
 	ackLatencyMs := getAckLatencyMs(ctx, subscriptionId, projectId)
 	messageBacklog := getMessageBacklog(ctx, subscriptionId, projectId)
-	// maxMessageAge := getMaxMessageAgeS(ctx, subscriptionId, projectId)
 
 	// Get recommended instances for each metric
 	ackLatencyRecommendation := averageValueRecommendation(ackLatencyMs, targetAckLatencyMs, currentInstances)
 	capacityRecommendation := instanceCapacityRecommendation(messageBacklog, instanceCapacity)
-	// maxAgeRecommendation := averageValueRecommendation(maxMessageAge, targetMaxAgeS, currentInstances)
-
+	
 	if ackLatencyRecommendation > configuredInstances {
-		// recommendedInstances = max(ackLatencyRecommendation, maxAgeRecommendation)
 		recommendedInstances = ackLatencyRecommendation
-		// } else if maxAgeRecommendation < configuredInstances {
-		// 	recommendedInstances = maxAgeRecommendation
 	} else if capacityRecommendation < configuredInstances {
 		recommendedInstances = capacityRecommendation
 	} else {
@@ -271,25 +262,6 @@ func getMessageBacklog(ctx context.Context, subscriptionId string, projectId str
 		projectId)
 
 	return int32(metricData[0].GetValue().GetDoubleValue())
-}
-
-func getMaxMessageAgeS(ctx context.Context, subscriptionId string, projectId string) float64 {
-	monitoringMetric := "pubsub.googleapis.com/subscription/oldest_unacked_message_age"
-	aggregationSeconds := 60
-	metricDelaySeconds := 120
-	groupBy := []string{"resource.labels.subscription_id"}
-	metricFilter := fmt.Sprintf("metric.type=\"%s\""+
-		" AND resource.labels.subscription_id =\"%s\"",
-		monitoringMetric, subscriptionId)
-
-	metricData := getMetricMean(ctx,
-		metricFilter,
-		metricDelaySeconds,
-		aggregationSeconds,
-		groupBy,
-		projectId)
-
-	return metricData[0].GetValue().GetDoubleValue()
 }
 
 func getAckLatencyMs(ctx context.Context, subscriptionId string, projectId string) float64 {
