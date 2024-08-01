@@ -71,16 +71,18 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 	fmt.Printf("Configuring for %v concurrent messages\n", maxOutstanding)
 	sub.ReceiveSettings.MaxOutstandingMessages = maxOutstanding
 
-	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		// fmt.Println("Got message:", string(m.Data))
-
-		// Sleep to emulate processing time
-		time.Sleep(time.Duration(processingDelayMs) * time.Millisecond)
-		m.Ack()
-	})
+	err = sub.Receive(ctx, handleMessage)
 	if err != nil {
 		return fmt.Errorf("sub.Receive: %w", err)
 	}
 
 	return nil
+}
+
+func handleMessage(ctx context.Context, m *pubsub.Message) {
+	// fmt.Println("Got message:", string(m.Data))
+
+	// Sleep to emulate processing time
+	time.Sleep(time.Duration(processingDelayMs) * time.Millisecond)
+	m.Ack()
 }
