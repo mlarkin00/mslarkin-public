@@ -52,6 +52,7 @@ func main() {
 			log.Fatal(err)
 		}
 		conn.Close()
+		fmt.Printf("Closing TCP connection and shutting down listener\n")
 	}()
 
 	maxOutstandingEnv := os.Getenv("MAX_CONCURRENT_MESSAGES")
