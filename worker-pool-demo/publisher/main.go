@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 // /////////////////////////
 var topicId string = os.Getenv("TOPIC_ID")     //"my-pubsub-topic"
 var projectId string = os.Getenv("PROJECT_ID") //"my-project-id"
-var messagesPerSecond = 200                    //Number of messages per second to publish
+var messagesPerSecond = 1000                   //Number of messages per second to publish
 ///////////////////////////
 
 // Create channel to listen for signals.
@@ -30,11 +29,6 @@ func main() {
 	// SIGTERM handles Cloud Run termination signal.
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
-
-	messagesPerSecondEnv := os.Getenv("MESSAGES_PER_SECOND")
-	if len(messagesPerSecondEnv) > 0 {
-		messagesPerSecond, _ = strconv.Atoi(messagesPerSecondEnv)
-	}
 
 	// Set up HTTP listener for manually publishing messages
 	http.HandleFunc("/publish-message", publishHandler)

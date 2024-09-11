@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -29,15 +28,6 @@ func main() {
 	// SIGTERM handles Cloud Run termination signal.
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
-
-	maxOutstandingEnv := os.Getenv("MAX_CONCURRENT_MESSAGES")
-	if len(maxOutstandingEnv) > 0 {
-		maxOutstanding, _ = strconv.Atoi(maxOutstandingEnv)
-	}
-	processDelayEnv := os.Getenv("PROCESS_DELAY_MS")
-	if len(processDelayEnv) > 0 {
-		processingDelayMs, _ = strconv.Atoi(processDelayEnv)
-	}
 
 	go func() {
 		for {
