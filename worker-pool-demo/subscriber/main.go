@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -62,8 +63,8 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 	sub.ReceiveSettings.MaxOutstandingMessages = maxOutstanding
 
 	err = sub.Receive(ctx, handleMessage)
-	if err != nil {
-		return fmt.Errorf("sub.Receive: %w", err)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		return fmt.Errorf("ERROR: sub.Receive: %w", err)
 	}
 
 	return nil
@@ -71,16 +72,15 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 
 func handleMessage(ctx context.Context, m *pubsub.Message) {
 	// fmt.Println("Got message:", string(m.Data))
-	bctx, bctxCancel := context.WithCancel(ctx)
 
 	// Simulate CPU load
 	go func() {
 		for {
 			select {
-			case <-bctx.Done():
+			case <-ctx.Done():
 				return
 			default:
-				time.Sleep(500 * time.Microsecond)
+				time.Sleep(250 * time.Microsecond)
 			}
 		}
 	}()
@@ -88,5 +88,4 @@ func handleMessage(ctx context.Context, m *pubsub.Message) {
 	// Sleep to emulate processing time
 	time.Sleep(time.Duration(processingDelayMs) * time.Millisecond)
 	m.Ack()
-	bctxCancel()
 }
