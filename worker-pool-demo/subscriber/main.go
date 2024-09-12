@@ -71,13 +71,13 @@ func subscribeToPullQueue(ctx context.Context, projectId, subscriptionId string)
 }
 
 func handleMessage(ctx context.Context, m *pubsub.Message) {
-	// fmt.Println("Got message:", string(m.Data))
+	bctx, bctxCancel := context.WithCancel(ctx)
 
 	// Simulate CPU load
 	go func() {
 		for {
 			select {
-			case <-ctx.Done():
+			case <-bctx.Done():
 				return
 			default:
 				time.Sleep(250 * time.Microsecond)
@@ -88,4 +88,5 @@ func handleMessage(ctx context.Context, m *pubsub.Message) {
 	// Sleep to emulate processing time
 	time.Sleep(time.Duration(processingDelayMs) * time.Millisecond)
 	m.Ack()
+	bctxCancel()
 }
