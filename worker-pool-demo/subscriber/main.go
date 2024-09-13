@@ -17,7 +17,7 @@ import (
 // /////////////////////////
 var subscriptionId string = os.Getenv("SUBSCRIPTION_ID") //"my-pull-subscription"
 var projectId string = os.Getenv("PROJECT_ID")           //"my-project-id"
-var processingDelayMs = 500                             //Delay to simulate message processing time
+var processingDelayMs = 100                              //Delay to simulate message processing time
 var maxOutstanding = 1000                                //Maximum number of concurrent messages
 ///////////////////////////
 
