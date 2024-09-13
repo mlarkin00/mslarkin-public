@@ -80,7 +80,6 @@ func handleMessage(ctx context.Context, m *pubsub.Message) {
 			case <-bctx.Done():
 				return
 			default:
-				time.Sleep(250 * time.Microsecond)
 			}
 		}
 	}()
