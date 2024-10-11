@@ -18,7 +18,7 @@ import (
 // /////////////////////////
 var topicId string = os.Getenv("TOPIC_ID")     //"my-pubsub-topic"
 var projectId string = os.Getenv("PROJECT_ID") //"my-project-id"
-var messagesPerSecond = 500                    //Number of messages per second to publish
+var messagesPerSecond = 250                    //Number of messages per second to publish
 ///////////////////////////
 
 // Create channel to listen for signals.
