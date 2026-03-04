@@ -1,0 +1,299 @@
+<!doctype html>
+<html style="margin: 0; padding: 0">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      @media only screen and (max-width: 480px) {
+        .nl-canvas { margin: 0 8px; }
+        .body { background-color: transparent !important; }
+        .nl-sm-ta-l { text-align: left; }
+        .item-list { width: 100% !important; }
+        .item-list > div { margin-left: 0 !important; margin-right: 0 !important; }
+        .nl-col-sm-100 { width: 100% !important; }
+        .nl-d-sm-b { display: block !important; }
+        .nl-m-sm-0 { margin: 0 !important; }
+        .nl-pl-sm-0 { padding: 0 !important; }
+        .nl-pl-sm-16 { padding-left: 16px !important; }
+        .nl-pr-sm-16 { padding-right: 16px !important; }
+        .nl-mb-sm-16 { margin-bottom: 16px !important; }
+        .nl-pt-sm-0 { padding-top: 0 !important; }
+        .nl-ml-sm-0 { margin-left: 0 !important; }
+        .nl-mr-sm-0 { margin-right: 0 !important; }
+        .nl-mx-sm-auto { margin-left: auto !important; margin-right: auto !important; }
+        .nl-is-last > .nl-is-even { margin-bottom: 16px; }
+        .nl-h-sm-auto { height: auto !important; }
+        .nl-img-sm-auto { max-width: 100% !important; height: auto !important; }
+        .nl-ox-sm-a { overflow: auto; }
+        .nl-tb-cell { padding: 4px 8px !important; }
+        .nl-dtb-cell { padding: 6px 0px !important; }
+        .nl-mt-sm-4 { margin-top: 4px; }
+        .nl-mt-sm-8 { margin-top: 8px; }
+        .nl-mb-sm-4 { margin-bottom: 4px; }
+        .nl-mb-sm-8 { margin-bottom: 8px; }
+        .nl-mb-sm-40 { margin-bottom: 40px; }
+        .nl-scoreboard { width: 100% !important; }
+        .nl-scoreboard .nl-scorecard { width: 50%; margin-right: 0 !important; }
+        .nl-tb-cell-sm { display: table-cell; padding: 8px 6px; }
+      }
+      @media print {
+        @page { size: auto; margin: 0; }
+        .nl-preview-actions { display: none !important; }
+      }
+      * { box-sizing: border-box; }
+      .nl-t-body p:last-child { margin-bottom: 0; }
+      .nl-para p:last-child { margin-bottom: 0; }
+    </style>
+  </head>
+  <body
+    class="body"
+    style="
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <div
+      dir="ltr"
+      class="nl card"
+      style="line-height: 1.4; padding-top: 24px; padding-bottom: 24px; font-size: 14px; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 0px auto; border-radius: 0.857143em;"
+    >
+      <div id="newsletter-canvas" class="nl-canvas" style="max-width: 640px !important; margin: 0px auto; border-radius: 12px;">
+
+        <!-- HEADER COMPONENT -->
+        <div id="header" data-component="header" class="nl-section" style="display: block; overflow: hidden; background-color: rgb(255, 255, 255); color: rgb(33, 33, 33); border-radius: 12px; margin-top: 0em; margin-bottom: 0.714286em; border-color: transparent; border-width: 0px; border-style: solid;">
+          <div style="text-align: center; padding-top: 120px; padding-bottom: 80px; background-color: rgb(51, 51, 51);">
+            <img id="header-background-image" src="{{ HEADER_BACKGROUND_IMAGE_URL }}" alt class="nl-mx-sm-auto nl-mb-16" style="margin-bottom: 16px; width: 100%; display: flex; border-radius: 12px; object-fit: contain; height: 100px;" height="100" />
+            <h2 id="header-title" style="margin-top: 0; margin-bottom: 0; font-size: 40px; color: rgb(255, 255, 255); font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; padding: 0px;">
+              {{ HEADER_TITLE }}
+            </h2>
+            <h2 id="header-subtitle" style="margin-top: 0; margin-bottom: 0; font-size: 28px; color: rgb(255, 255, 255); opacity: 0.7; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; padding: 0px;">
+              {{ HEADER_SUBTITLE }}
+            </h2>
+          </div>
+
+          <div id="header-announcements" data-component="announcements" class="nl-para" style="padding: 16px; border-radius: 0px 0px 8px 8px">
+            <div class="editor-content nl-content nl-t-body nl-mt-8" style="line-height: 1.4; margin-top: 8px">
+              <div style="border-radius: inherit">
+                <div translate="no" class="ProseMirror" tabindex="0" style="border-radius: inherit">
+
+                  <!-- BANNER / ANNOUNCEMENTS (OPTIONAL) -->
+                  <p id="banner-text" style="margin-top: 0; margin-bottom: 16px">
+                    <strong style="font-weight: 600"><em><span style="color: #ea4335">NOTE</span>: {{ BANNER_TEXT }}</em></strong>
+                  </p>
+
+                  <!-- INTRODUCTION -->
+                  <p id="introduction-text" data-component="introduction" style="margin-top: 0; margin-bottom: 8px">
+                    {{ INTRODUCTION_TEXT }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIGHLIGHTS COMPONENT -->
+        <div id="highlights" data-component="highlights" class="nl-section" style="display: block; color: rgb(33, 33, 33); border-radius: 12px; margin-top: 0.714286em; margin-bottom: 0.714286em;">
+          <div class="nl-section-body nl-o-h nl-px-20" style="overflow: hidden; padding-left: 20px; padding-right: 20px; padding-top: 1.42857em; padding-bottom: 0.714286em; border-radius: 12px; background-color: rgb(255, 255, 255); border-color: rgb(0, 119, 223) transparent transparent; border-width: 0.428571em 0px 0px; border-style: solid;">
+            <div class="editor-content nl-content nl-t-body" style="line-height: 1.4">
+              <div style="border-radius: inherit">
+                <div translate="no" class="ProseMirror" tabindex="0" style="border-radius: inherit">
+                  <h2 style="margin-top: 0; margin-bottom: 0; font-size: 18px; font-weight: 500; margin: 0 0 8px;">
+                    Highlights
+                  </h2>
+                  <ul id="highlights-list" data-component="highlights-list" style="padding-left: 20px; margin-top: 0px; margin-bottom: 8px;">
+
+                    <!-- REPEATED HIGHLIGHT ITEM -->
+                    <li class="highlight-item" data-component="highlight-item" style="margin-bottom: 2px">
+                      <p style="margin-top: 0; margin-bottom: 0">
+                        🎉 {{ HIGHLIGHT_ITEM }}
+                      </p>
+                    </li>
+                    <!-- END REPEATED HIGHLIGHT ITEM -->
+
+                    <!-- Add new highlights here -->
+
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- REPEATED SECTION BLOCK START -->
+        <!-- ============================================== -->
+        <!-- NOTE: Duplicate this entire block for each new major subject area -->
+        <div class="content-section" data-component="section" data-section-name="{{ SECTION_TITLE }}">
+
+          <!-- SECTION TITLE BANNER -->
+          <!-- NOTE: You can change the border/text colors per section: e.g. rgb(232, 113, 10) / rgb(30, 142, 62) / rgb(26, 115, 232) -->
+          <div class="nl-section section-header" data-element="section-header" style="display: block; color: rgb(33, 33, 33); background-image: url(''); background-repeat: no-repeat; background-size: cover; border-radius: 12px; margin-top: 0.785714em; margin-bottom: 0em; padding: 0.571429em 0em;">
+            <h2 class="nl-t-sh1 nl-fw-m section-title" data-element="section-title" style="margin-top: 0; margin-bottom: 0; margin: 0; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; padding: 0px; color: rgb(232, 113, 10); font-size: 22px; font-weight: 500;">
+              // {{ SECTION_TITLE }}
+            </h2>
+          </div>
+
+          <!-- SECTION DESCRIPTION / OWNER (OPTIONAL) -->
+          <div class="nl-section section-overview" data-element="section-overview" style="display: block; color: rgb(33, 33, 33); border-radius: 12px; margin-top: 1.42857em; margin-bottom: 1.42857em;">
+            <div class="nl-section-body nl-o-h nl-px-20" style="overflow: hidden; padding-left: 20px; padding-right: 20px; padding-top: 1.42857em; padding-bottom: 1.42857em; border-radius: 12px; background-color: rgb(255, 255, 255); border-color: rgb(232, 113, 10) transparent transparent; border-width: 0.428571em 0px 0px; border-style: solid;">
+              <div class="editor-content nl-content nl-t-body" style="line-height: 1.4">
+                <div style="border-radius: inherit">
+                  <div translate="no" class="ProseMirror" tabindex="0" style="border-radius: inherit">
+                    <p class="section-description" data-element="section-description" style="margin-top: 0; margin-bottom: 16px">
+                      <span style="color: rgb(0, 0, 0)">{{ SECTION_DESCRIPTION }}</span>
+                    </p>
+                    <p class="section-owner" data-element="section-owner" style="margin-top: 0; margin-bottom: 8px">
+                      <strong style="font-weight: 600"><em><span style="color: rgb(0, 0, 0)">Owner: {{ OWNER }}</span></em></strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KEY METRICS (REPEATED, OPTIONAL) -->
+          <div class="nl-section nl-o-h metrics-container" data-component="metrics" style="display: block; overflow: hidden; background-color: rgb(250, 123, 23); color: rgb(32, 33, 36); border-radius: 12px; margin-top: 1.42857em; margin-bottom: 0em; padding: 1.14286em;">
+            <div class="nl-scoreboard nl-f-c" style="margin-left: auto; margin-right: auto; width: fit-content; margin-bottom: 0px;">
+
+              <!-- REPEATED METRIC ITEM -->
+              <div class="nl-scorecard nl-mb-sm-40 metric-item" data-component="metric-item" data-metric-name="{{ METRIC_TITLE }}" style="display: inline-block; margin-right: 59px; margin-left: 0px;">
+                <div class="nl-scorecard-title metric-title" data-element="metric-title" style="color: rgba(0, 0, 0, 0.7); font-weight: 500">
+                  {{ METRIC_TITLE }}
+                </div>
+                <div class="nl-scorecard-value metric-value" data-element="metric-value" style="font-weight: 500; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; padding: 0px; font-size: 29.4px;">
+                  {{ METRIC_VALUE }}
+                </div>
+                <div class="nl-scorecard-metadata metric-description" data-element="metric-description">
+                  <div class="editor-content nl-content nl-t-body" style="line-height: 1.4">
+                    <div style="border-radius: inherit">
+                      <div translate="no" class="ProseMirror" tabindex="0" style="border-radius: inherit">
+                        <p style="margin-top: 0; margin-bottom: 8px">
+                          <em><span style="color: #3c4043">{{ METRIC_DESCRIPTION }}</span></em>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- END REPEATED METRIC ITEM -->
+
+              <!-- Add new metrics here -->
+            </div>
+          </div>
+
+          <!-- MILESTONES (REPEATED, OPTIONAL) -->
+          <div class="nl-section milestones-container" data-component="milestones" style="display: block; margin-top: 0.714286em; margin-bottom: 1.42857em; padding-top: 0em; padding-bottom: 0em;">
+            <h2 class="nl-t-sh1 nl-fw-m nl-mb-12" style="margin-top: 0; margin: 0; font-size: 22px; font-weight: 500; margin-bottom: 12px; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; padding: 0px;">
+              Milestones
+            </h2>
+            <div class="nl-section-body" style="background-color: rgb(255, 255, 255); color: rgb(60, 64, 67); border-radius: 12px; padding: 20px;">
+              <div class="okrs">
+
+                <!-- REPEATED MILESTONE GROUP -->
+                <div class="prj nl-mb-32 milestone-group" data-component="milestone-group" data-group-name="{{ MILESTONE_GROUP_TITLE }}" style="margin-bottom: 32px">
+                  <div class="nl-t-sh2 nl-mb-8 nl-pb-6 nl-f-h group-title" data-element="group-title" style="font-family: Google Sans, -apple-system, BlinkMacSystemFont, 'Google Sans', sans-serif; margin: 0; padding: 0; font-size: 18px; font-weight: 500; padding-bottom: 6px; margin-bottom: 8px;">
+                    {{ MILESTONE_GROUP_TITLE }}
+                  </div>
+                  <div class="nl-mt-8 nl-mb-12" style="margin-top: 8px; margin-bottom: 12px">
+                    <div style="width: 100%">
+
+                      <!-- REPEATED MILESTONE ITEM -->
+                      <div class="nl-dtb-row nl-bb-d1 nl-d-sm-b milestone-item" data-component="milestone-item" data-milestone-name="{{ MILESTONE_TITLE }}" style="display: flex; border-bottom: 1px solid rgb(238, 238, 238);">
+                        <div class="nl-dtb-cell nl-fw-m nl-c-muted nl-ws-nr nl-col-sm-100 nl-mt-sm-8 milestone-priority" data-element="priority" style="color: rgba(0, 0, 0, 0.6); font-weight: 500; white-space: nowrap; padding: 14px 0px 8px; width: 32px;">
+                          <!-- PRIORITY BADGE TEMPLATES (Keep one): -->
+                          <!-- P0: background: #e72419 -->
+                          <!-- P1: background: #fa9217 -->
+                          <div class="nl-badge nl-badge-p0 nl-badge-sm nl-mr-4" style="margin-right: 4px; display: inline; white-space: nowrap; font-weight: 500; cursor: pointer; min-height: 26px; line-height: 1; font-style: normal; padding: 2px 6px; color: #fff; background: #e72419; border-radius: 8px;">
+                            {{ PRIORITY }}
+                          </div>
+                        </div>
+
+                        <div class="kr nl-dtb-cell nl-col-sm-100 milestone-details" data-element="details" style="padding: 12px 24px 12px 20px; width: max(90%, 400px);">
+                          {{ MILESTONE_TITLE }}
+                          <div class="nl-mt-8" style="margin-top: 8px">
+                            <span class="nl-c-muted" style="color: rgba(0, 0, 0, 0.6)"><a href="#" class="milestone-owner" data-element="owner" style="color: #1a73e8; font-weight: 500">{{ OWNER }}</a></span>
+                            <span class="nl-mx-12 nl-c-muted" style="color: rgba(0, 0, 0, 0.6); margin-left: 12px; margin-right: 12px;">•</span>
+                            <span class="nl-c-muted milestone-target-date" data-element="target-date" style="color: rgba(0, 0, 0, 0.6)">{{ TARGET_DATE }}</span>
+                          </div>
+                        </div>
+
+                        <div class="status nl-dtb-cell nl-ta-r nl-mb-sm-8 nl-col-sm-100 milestone-status" data-element="status" style="text-align: right; padding: 12px 0px">
+                          <!-- STATUS BADGE TEMPLATES (Keep one): -->
+                          <!-- Complete: color: #1967d2; background: #e8f0fe; -->
+                          <!-- In progress: color: #1e8e3e; background: #e6ffec; -->
+                          <!-- At risk: color: #c5221f; background: #fce8e6; -->
+                          <!-- Not started: color: #3c4043; background: #f8f9fa; -->
+                          <div class="nl-badge nl-badge-blue nl-badge-undefined" style="display: inline; padding: 6px 12px; border-radius: 24px; white-space: nowrap; font-weight: 500; cursor: pointer; min-height: 26px; line-height: 1; font-style: normal; color: #3c4043; background: #f8f9fa;">
+                            {{ STATUS }}
+                          </div>
+                        </div>
+                      </div>
+                      <!-- END REPEATED MILESTONE ITEM -->
+
+                      <!-- Add new milestone items here -->
+                    </div>
+                  </div>
+                </div>
+                <!-- END REPEATED MILESTONE GROUP -->
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- ============================================== -->
+        <!-- REPEATED SECTION BLOCK END -->
+        <!-- ============================================== -->
+
+        <!-- INSERT NEW SECTIONS HERE -->
+
+
+        <!-- CONTACTS COMPONENT -->
+        <div id="contacts" data-component="contacts" class="nl-section" style="display: block; background-color: rgb(60, 64, 67); color: rgb(255, 255, 255); background-image: url(''); background-repeat: no-repeat; background-size: cover; border-radius: 0px; margin-top: 0.714286em; margin-bottom: 0em; padding: 0.357143em 0em 0.357143em 0.357143em;">
+          <h2 class="nl-t-sh1 nl-fw-m" style="margin-top: 0; margin-bottom: 0; margin: 0; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; padding: 0px; color: rgb(255, 255, 255); font-size: 17px; font-weight: 500;">
+            // Contacts
+          </h2>
+        </div>
+        <div class="nl-section nl-px-20 contacts-container" data-component="contacts-container" style="display: block; padding-left: 20px; padding-right: 20px; background-color: rgb(241, 243, 244); border-radius: 0px; margin-top: 0.0714286em; margin-bottom: 0.357143em; padding: 0em; border-color: transparent; border-width: 0px; border-style: solid;">
+          <div class="nl-table nl-t-body" style="line-height: 1.4; border-radius: inherit">
+            <div class="editor-content nl-content nl-t-body" style="line-height: 1.4; border-radius: inherit">
+              <div style="border-radius: inherit">
+                <div translate="no" class="ProseMirror" tabindex="0" style="border-radius: inherit">
+                  <table style="border-collapse: collapse; margin: 0; overflow: hidden; border-radius: inherit; border: inset 2px transparent; min-width: 100%; margin-bottom: 8px;">
+                    <tbody id="contacts-list" data-component="contacts-list">
+                      <tr class="contact-item" data-component="contact-item" data-contact-role="Team">
+                        <td colspan="1" rowspan="1" colwidth="115" width="115" style="font-family: Google Sans, -apple-system, BlinkMacSystemFont, Roboto, sans-serif; min-width: 1em; border-bottom: 1px solid #ced4da; padding: 12px 16px; vertical-align: top; box-sizing: border-box; position: relative; max-width: 115px;" valign="top">
+                          <p style="margin-bottom: 0; margin-top: 0">Team</p>
+                        </td>
+                        <td colspan="1" rowspan="1" colwidth="94" width="94" style="font-family: Google Sans, -apple-system, BlinkMacSystemFont, Roboto, sans-serif; min-width: 1em; border-bottom: 1px solid #ced4da; padding: 12px 16px; vertical-align: top; box-sizing: border-box; position: relative; max-width: 94px;" valign="top">
+                          <p style="margin-bottom: 0; margin-top: 0">
+                            <a target="_blank" rel="noopener noreferrer nofollow" href="mailto:gke-agentic-tooling-team@google.com" style="color: #1a73e8; font-weight: 500; margin-top: 0;">gke-agentic-tooling-team@google.com</a>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr class="contact-item" data-component="contact-item" data-contact-role="PM">
+                        <td colspan="1" rowspan="1" colwidth="115" width="115" style="font-family: Google Sans, -apple-system, BlinkMacSystemFont, Roboto, sans-serif; min-width: 1em; border-bottom: 1px solid #ced4da; padding: 12px 16px; vertical-align: top; box-sizing: border-box; position: relative; max-width: 115px;" valign="top">
+                          <p style="margin-bottom: 0; margin-top: 0">PM</p>
+                        </td>
+                        <td colspan="1" rowspan="1" colwidth="94" width="94" style="font-family: Google Sans, -apple-system, BlinkMacSystemFont, Roboto, sans-serif; min-width: 1em; border-bottom: 1px solid #ced4da; padding: 12px 16px; vertical-align: top; box-sizing: border-box; position: relative; max-width: 94px;" valign="top">
+                          <p style="margin-bottom: 0; margin-top: 0">
+                            <a target="_blank" rel="noopener noreferrer nofollow" href="mailto:matthewlarkin@google.com" style="color: #1a73e8; font-weight: 500; margin-top: 0;">matthewlarkin@google.com</a>
+                          </p>
+                        </td>
+                      </tr>
+                      <!-- Add new contacts here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </body>
+</html>
